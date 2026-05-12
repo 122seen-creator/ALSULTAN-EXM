@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اخـتبار المهارات الرقمــية</title>
+    <!-- استيراد خط تجويد وFont Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-color: #ff9a9e;
+            --text-color: #2d3436;
+        }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--primary-gradient);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+        }
+        
+        /* زر كتم الصوت */
+        #mute-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #764ba2;
+        }
+
+        .hidden { display: none; }
+        
+        input {
+            width: 80%;
+            padding: 15px;
+            margin: 20px 0;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        button {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        .info-card { color: var(--text-color); font-size: 1.3rem; line-height: 1.6; margin-bottom: 25px; }
+        .question-text { font-size: 1.2rem; font-weight: bold; color: #4834d4; margin-bottom: 20px; }
+        .option-btn {
+            display: block; width: 100%; margin: 10px 0;
+            background: #f1f2f6; color: #2d3436; border-radius: 10px;
+            padding: 15px; text-align: right; font-weight: 500;
+        }
+        .option-btn:hover { background: #dfe4ea; }
+
+        #timer-display {
+            width: 60px; height: 60px; line-height: 60px;
+            border-radius: 50%; border: 4px solid var(--accent-color);
+            margin: 0 auto 20px; font-weight: bold; font-size: 1.4rem; color: #e74c3c;
+        }
+        
+        .progress-bar {
+            height: 8px; width: 100%; background: #eee;
+            border-radius: 10px; margin-bottom: 20px; overflow: hidden;
+        }
+        #progress-fill { height: 100%; background: var(--accent-color); width: 0%; transition: 0.5s; }
+    </style>
+</head>
+<body>
+
+<!-- عنصر الصوت (مخفي) -->
+<audio id="bg-music" loop>
+    <source src="song.mp3" type="audio/mpeg"> <!-- استبدل song.mp3 باسم ملفك على قيت هب -->
+</audio>
+
+<div class="container">
+    <!-- زر التحكم بالصوت داخل الحاوية -->
+    <button id="mute-btn" onclick="toggleMute()">
+        <i id="mute-icon" class="fas fa-volume-up"></i>
+    </button>
+
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <!-- 1. شاشة البداية -->
+    <div id="step-start">
+        <i class="fas fa-user-graduate fa-3x" style="color: #667eea;"></i>
+        <h2>مرحباً بك يا بطل</h2>
+        <p>أدخل اسمك لبدء الاخـــتبار:</p>
+        <input type="text" id="student-name" placeholder="اكتب اسمك هنا..." required>
+        <br>
+        <button onclick="startApp()">ابــــدأ </button>
+    </div>
+
+    <!-- 2. شاشة المعلومة -->
+    <div id="step-info" class="hidden">
+        <i class="fas fa-lightbulb fa-2x" style="color: #f1c40f;"></i>
+        <h3>معلومة رقمية</h3>
+        <div id="info-content" class="info-card"></div>
+        <button onclick="showQuestion()">فهمت، انتقل للسؤال</button>
+    </div>
+
+    <!-- 3. شاشة السؤال -->
+    <div id="step-quiz" class="hidden">
+        <div id="timer-display">20</div>
+        <div id="question-content" class="question-text"></div>
+        <div id="options-container"></div>
+    </div>
+
+    <!-- 4. شاشة النهاية -->
+    <div id="step-finish" class="hidden">
+        <i class="fas fa-check-circle fa-4x" style="color: #2ecc71;"></i>
+        <h2>تم الإنجاز بنجاح!</h2>
+        <p>شكراً لك على مشاركتك في الاخــــتبار.<br></p>
+        <form id="formspree-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+            <input type="hidden" name="الاسم" id="final-name">
+            <input type="hidden" name="النتيجة" id="final-score">
+            <button type="submit">إغلاق وتأكيد إرسال الإجابات للأســتاذ: ســـلطان العــقلاء</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const music = document.getElementById('bg-music');
+    const muteIcon = document.getElementById('mute-icon');
+
+    // دالة كتم وتشغيل الصوت
+    function toggleMute() {
+        if (music.muted) {
+            music.muted = false;
+            muteIcon.className = 'fas fa-volume-up';
+        } else {
+            music.muted = true;
+            muteIcon.className = 'fas fa-volume-mute';
+        }
+    }
+
+    const data = [
+        { info: "المواطنة الرقمية هي التعامل بمسؤولية وأخلاق مع التكنولوجيا.", q: "المواطنة الرقمية تعني الاستخدام الـ.... للتكنولوجيا:", options: ["المسؤول والأخلاقي", "العشوائي", "المخفي"], correct: 0 },
+        { info: "الملكية الفكرية تضمن للمبدع حماية إنتاجه من السرقة أو التقليد.", q: "ما فائدة الملكية الفكرية؟", options: ["بيع الأجهزة", "حماية الإبداع من السرقة", "تسريع الإنترنت"], correct: 1 },
+        { info: "كلمة المرور القوية يجب أن تحتوي على رموز وأرقام وحروف متنوعة.", q: "أي من هذه الكلمات تعتبر الأقوى؟", options: ["123456", "asdf2026", "GLi@#$20!1"], correct: 2 },
+        { info: "البصمة الرقمية هي كل ما تتركه من أثر عند استخدامك للإنترنت.", q: "هل يمكن مسح البصمة الرقمية تماماً؟", options: ["نعم بسهولة", "لا، تبقى كأثر دائم", "فقط عند حذف المتصفح"], correct: 1 },
+        { info: "الاستخدام العادل يسمح بمشاركة أجزاء من المحتوى لأغراض تعليمية فقط.", q: "يُسمح بالاستخدام العادل في حالة:", options: ["البيع والتجارة", "التعليم والنقد", "تزوير الكتب"], correct: 1 },
+        { info: "التنمر الإلكتروني هو سلوك عدواني يهدف لإيذاء الآخرين رقمياً.", q: "عند التعرض للتنمر الرقمي يجب:", options: ["الرد بقوة", "الحظر والإبلاغ", "إغلاق الإنترنت للأبد"], correct: 1 },
+        { info: "انتحال الشخصية هو ادعاء اسم أو صفة شخص آخر على الإنترنت.", q: "انتحال الشخصية يعتبر تصرفاً:", options: ["ذكياً", "غير قانوني", "مرحاً"], correct: 1 },
+        { info: "رخص المشاع الإبداعي تسهل مشاركة الأعمال بشكل قانوني.", q: "ما هدف رخص المشاع الإبداعي؟", options: ["منع النشر", "المشاركة القانونية", "تشفير الملفات"], correct: 1 },
+        { info: "الأمان الرقمي يتطلب عدم مشاركة المواقع الجغرافية مع الغرباء.", q: "مشاركة موقعك بدقة مع الغرباء يهدد:", options: ["سرعة الجهاز", "سلامتك الشخصية", "سعة التخزين"], correct: 1 },
+        { info: "المواطن الرقمي الذكي هو من يتحرى عن المعلومة قبل تصديقها ونشرها.", q: "قبل نشر أي معلومة تصلك يجب:", options: ["نشرها فوراً", "التأكد من مصدرها", "حذفها مباشرة"], correct: 1 }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 20;
+
+    function startApp() {
+        const name = document.getElementById('student-name').value;
+        if (!name) return alert("فضلاً أدخل اسمك");
+        
+        // تشغيل الموسيقى عند الضغط على "ابدأ" لتجاوز قيود المتصفح
+        music.play().catch(error => console.log("الاشتراطات تمنع التشغيل التلقائي"));
+        
+        document.getElementById('final-name').value = name;
+        document.getElementById('step-start').classList.add('hidden');
+        showInfo();
+    }
+
+    function showInfo() {
+        if (currentIdx >= data.length) return finish();
+        updateProgress();
+        document.getElementById('step-quiz').classList.add('hidden');
+        document.getElementById('step-info').classList.remove('hidden');
+        document.getElementById('info-content').innerText = data[currentIdx].info;
+    }
+
+    function showQuestion() {
+        document.getElementById('step-info').classList.add('hidden');
+        document.getElementById('step-quiz').classList.remove('hidden');
+        
+        const item = data[currentIdx];
+        document.getElementById('question-content').innerText = item.q;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        item.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx);
+            container.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        timeLeft = 8;
+        document.getElementById('timer-display').innerText = timeLeft;
+        clearInterval(timer);
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-display').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                checkAnswer(-1);
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(choice) {
+        clearInterval(timer);
+        if (choice === data[currentIdx].correct) score++;
+        currentIdx++;
+        showInfo();
+    }
+
+    function updateProgress() {
+        const percent = (currentIdx / data.length) * 100;
+        document.getElementById('progress-fill').style.width = percent + '%';
+    }
+
+    function finish() {
+        document.getElementById('step-info').classList.add('hidden');
+        document.getElementById('step-quiz').classList.add('hidden');
+        document.getElementById('step-finish').classList.remove('hidden');
+        document.getElementById('final-score').value = score + " من 10";
+        document.getElementById('progress-fill').style.width = '100%';
+    }
+</script>
+
+</body>
+</html>
