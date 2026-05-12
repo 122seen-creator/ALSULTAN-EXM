@@ -140,15 +140,13 @@
     </div>
 
     <!-- 4. شاشة النهاية -->
-    <div id="step-finish" class="hidden">
-        <i class="fas fa-check-circle fa-4x" style="color: #2ecc71;"></i>
-        <h2>تم الإنجاز بنجاح!</h2>
-        <p>شكراً لك على مشاركتك في الاخــــتبار.<br></p>
-        <form id="formspree-form" action="https://formspree.io/f/mvzllqjd" method="POST">
-            <input type="hidden" name="الاسم" id="final-name">
-            <input type="hidden" name="النتيجة" id="final-score">
-            <button type="submit">إغلاق وتأكيد إرسال الإجابات للأســتاذ: ســـلطان العــقلاء</button>
-        </form>
+<div id="step-finish" class="hidden">
+    <i class="fas fa-check-circle fa-4x" style="color: #2ecc71;"></i>
+    <h2 id="status-title">تم الإنجاز بنجاح!</h2>
+    <p id="status-text">شكراً لك على مشاركتك في الاختبار.</p>
+    
+    <div id="submission-area">
+        <button onclick="submitViaAjax()" id="submit-btn">إرسال الإجابات للأستاذ: سلطان العقلاء</button>
     </div>
 </div>
 
@@ -258,6 +256,66 @@
         document.getElementById('final-score').value = score + " من 10";
         document.getElementById('progress-fill').style.width = '100%';
     }
+    // مصفوفة لتخزين تفاصيل إجابات الطالب
+let studentAnswersDetails = "";
+
+function checkAnswer(choice) {
+    clearInterval(timer);
+    const item = data[currentIdx];
+    const isCorrect = choice === item.correct;
+    
+    if (isCorrect) score++;
+
+    // تسجيل التفاصيل لإرسالها للإيميل
+    studentAnswersDetails += `
+السؤال: ${item.q}
+- إجابة الطالب: ${choice === -1 ? "انتهى الوقت" : item.options[choice]}
+- الحالة: ${isCorrect ? "✅ صحيحة" : "❌ خاطئة (الإجابة الصحيحة: " + item.options[item.correct] + ")"}
+------------------------`;
+
+    currentIdx++;
+    showInfo();
+}
+
+function finish() {
+    document.getElementById('step-info').classList.add('hidden');
+    document.getElementById('step-quiz').classList.add('hidden');
+    document.getElementById('step-finish').classList.remove('hidden');
+    document.getElementById('progress-fill').style.width = '100%';
+}
+
+async function submitViaAjax() {
+    const btn = document.getElementById('submit-btn');
+    const name = document.getElementById('final-name').value;
+    const scoreText = score + " من 10";
+    
+    // تغيير شكل الزر أثناء الإرسال
+    btn.innerText = "جاري الإرسال...";
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("الاسم", name);
+    formData.append("النتيجة النهائية", scoreText);
+    formData.append("تفاصيل الإجابات", studentAnswersDetails);
+
+    try {
+        const response = await fetch("https://formspree.io/f/YOUR_FORM_ID", {
+            method: "POST",
+            body: formData,
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.ok) {
+            document.getElementById('submission-area').innerHTML = "<h3 style='color:#2ecc71;'>✅ تم إرسال إجاباتك بنجاح!</h3>";
+            document.getElementById('status-title').innerText = "شكراً لك!";
+        } else {
+            throw new Error();
+        }
+    } catch (error) {
+        btn.innerText = "فشل الإرسال.. حاول مرة أخرى";
+        btn.disabled = false;
+    }
+}
 </script>
 
 </body>
