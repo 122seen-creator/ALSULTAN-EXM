@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>اخـتبار المهارات الرقمــية</title>
-    <!-- استيراد خط تجويد وFont Awesome -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -33,49 +32,24 @@
             text-align: center;
             position: relative;
         }
-        
         #mute-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
+            position: absolute; top: 20px; left: 20px;
+            background: white; border: none; border-radius: 50%;
+            width: 40px; height: 40px; cursor: pointer;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #764ba2;
+            z-index: 1000; display: flex; justify-content: center; align-items: center; color: #764ba2;
         }
-
         .hidden { display: none; }
-        
         input {
-            width: 80%;
-            padding: 15px;
-            margin: 20px 0;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            text-align: center;
+            width: 80%; padding: 15px; margin: 20px 0;
+            border: 2px solid #eee; border-radius: 12px; font-size: 1.1rem; text-align: center;
         }
         button {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-weight: bold;
+            background: var(--primary-gradient); color: white; border: none;
+            padding: 12px 30px; border-radius: 50px; font-size: 1.1rem;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; font-weight: bold;
         }
         button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        
         .info-card { color: var(--text-color); font-size: 1.3rem; line-height: 1.6; margin-bottom: 25px; }
         .question-text { font-size: 1.2rem; font-weight: bold; color: #4834d4; margin-bottom: 20px; }
         .option-btn {
@@ -84,17 +58,12 @@
             padding: 15px; text-align: right; font-weight: 500;
         }
         .option-btn:hover { background: #dfe4ea; }
-
         #timer-display {
             width: 60px; height: 60px; line-height: 60px;
             border-radius: 50%; border: 4px solid var(--accent-color);
             margin: 0 auto 20px; font-weight: bold; font-size: 1.4rem; color: #e74c3c;
         }
-        
-        .progress-bar {
-            height: 8px; width: 100%; background: #eee;
-            border-radius: 10px; margin-bottom: 20px; overflow: hidden;
-        }
+        .progress-bar { height: 8px; width: 100%; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
         #progress-fill { height: 100%; background: var(--accent-color); width: 0%; transition: 0.5s; }
     </style>
 </head>
@@ -137,9 +106,7 @@
         <i class="fas fa-check-circle fa-4x" style="color: #2ecc71;"></i>
         <h2 id="status-title">تم الإنجاز بنجاح!</h2>
         <p id="status-text">شكراً لك على مشاركتك في الاختبار.</p>
-        
         <input type="hidden" id="final-name">
-        
         <div id="submission-area">
             <button onclick="submitViaAjax()" id="submit-btn">إرسال الإجابات للأستاذ: سلطان العقلاء</button>
         </div>
@@ -222,14 +189,10 @@
     function checkAnswer(choice) {
         clearInterval(timer);
         const item = data[currentIdx];
-        const isCorrect = choice === item.correct;
+        const isCorrect = (choice === item.correct);
         if (isCorrect) score++;
 
-        studentAnswersDetails += `
-السؤال: ${item.q}
-- إجابة الطالب: ${choice === -1 ? "انتهى الوقت" : item.options[choice]}
-- الحالة: ${isCorrect ? "✅ صحيحة" : "❌ خاطئة (الإجابة الصحيحة: " + item.options[item.correct] + ")"}
-------------------------`;
+        studentAnswersDetails += `السؤال: ${item.q} | إجابة الطالب: ${choice === -1 ? "انتهى الوقت" : item.options[choice]} | الحالة: ${isCorrect ? "✅" : "❌ (الصح: " + item.options[item.correct] + ")"}\n\n`;
 
         currentIdx++;
         showInfo();
@@ -255,24 +218,33 @@
         btn.innerText = "جاري الإرسال...";
         btn.disabled = true;
 
-        const formData = new FormData();
-        formData.append("الاسم", name);
-        formData.append("النتيجة النهائية", scoreText);
-        formData.append("تفاصيل الإجابات", studentAnswersDetails);
+        const dataToSend = {
+            "الاسم": name,
+            "النتيجة": scoreText,
+            "التفاصيل": studentAnswersDetails
+        };
 
         try {
             const response = await fetch("https://formspree.io/f/YOUR_FORM_ID", {
                 method: "POST",
-                body: formData,
-                headers: { 'Accept': 'application/json' }
+                body: JSON.stringify(dataToSend),
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json' 
+                }
             });
             if (response.ok) {
                 document.getElementById('submission-area').innerHTML = "<h3 style='color:#2ecc71;'>✅ تم إرسال إجاباتك بنجاح!</h3>";
                 document.getElementById('status-title').innerText = "شكراً لك!";
-            } else { throw new Error(); }
+            } else { 
+                const errData = await response.json();
+                console.error(errData);
+                throw new Error(); 
+            }
         } catch (error) {
-            alert("حدث خطأ أثناء الإرسال، حاول مجدداً");
-            btn.innerText = "إرسال الإجابات للأستاذ";
+            console.error(error);
+            alert("فشل الإرسال. تأكد من تفعيل الفورم أو جرب لاحقاً.");
+            btn.innerText = "إعادة محاولة الإرسال";
             btn.disabled = false;
         }
     }
