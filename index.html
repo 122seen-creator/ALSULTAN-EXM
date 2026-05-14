@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>اخـتبار المهارات الرقمــية</title>
+    <!-- استيراد خط تجويد وFont Awesome -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -116,10 +117,11 @@
 <script>
     const music = document.getElementById('bg-music');
     const muteIcon = document.getElementById('mute-icon');
+    const formEndpoint = "https://formspree.io/f/meenbaea";
 
     function toggleMute() {
         if (music.muted) { music.muted = false; muteIcon.className = 'fas fa-volume-up'; } 
-        else { music.muted = true; muteIcon.className = 'fas fa-volume-mute'; }
+        else { music.muted = true; music.className = 'fas fa-volume-mute'; }
     }
 
     const data = [
@@ -192,7 +194,7 @@
         const isCorrect = (choice === item.correct);
         if (isCorrect) score++;
 
-        studentAnswersDetails += `السؤال: ${item.q} | إجابة الطالب: ${choice === -1 ? "انتهى الوقت" : item.options[choice]} | الحالة: ${isCorrect ? "✅" : "❌ (الصح: " + item.options[item.correct] + ")"}\n\n`;
+        studentAnswersDetails += `السؤال: ${item.q} | إجابة الطالب: ${choice === -1 ? "انتهى الوقت" : item.options[choice]} | الحالة: ${isCorrect ? "✅ صح" : "❌ خطأ (الصح: " + item.options[item.correct] + ")"}\n\n`;
 
         currentIdx++;
         showInfo();
@@ -218,34 +220,41 @@
         btn.innerText = "جاري الإرسال...";
         btn.disabled = true;
 
-        const dataToSend = {
-            "الاسم": name,
-            "النتيجة": scoreText,
-            "التفاصيل": studentAnswersDetails
-        };
+        const formData = new FormData();
+        formData.append("الاسم", name);
+        formData.append("النتيجة النهائية", scoreText);
+        formData.append("تفاصيل الإجابات", studentAnswersDetails);
 
         try {
-            const response = await fetch("https://formspree.io/f/YOUR_FORM_ID", {
+            const response = await fetch(formEndpoint, {
                 method: "POST",
-                body: JSON.stringify(dataToSend),
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json' 
-                }
+                body: formData,
+                headers: { 'Accept': 'application/json' }
             });
+
             if (response.ok) {
                 document.getElementById('submission-area').innerHTML = "<h3 style='color:#2ecc71;'>✅ تم إرسال إجاباتك بنجاح!</h3>";
                 document.getElementById('status-title').innerText = "شكراً لك!";
-            } else { 
-                const errData = await response.json();
-                console.error(errData);
-                throw new Error(); 
+            } else {
+                throw new Error("API Error");
             }
         } catch (error) {
             console.error(error);
-            alert("فشل الإرسال. تأكد من تفعيل الفورم أو جرب لاحقاً.");
-            btn.innerText = "إعادة محاولة الإرسال";
-            btn.disabled = false;
+            alert("حدث خطأ في الإرسال التلقائي. جاري المحاولة بالطريقة البديلة...");
+            
+            // الطريقة البديلة في حال فشل AJAX
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = formEndpoint;
+            
+            const fields = { "الاسم": name, "النتيجة": scoreText, "التفاصيل": studentAnswersDetails };
+            for (const key in fields) {
+                const input = document.createElement('input');
+                input.type = 'hidden'; input.name = key; input.value = fields[key];
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
         }
     }
 </script>
