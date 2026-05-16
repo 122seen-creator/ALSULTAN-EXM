@@ -145,6 +145,10 @@
     function startApp() {
         const name = document.getElementById('student-name').value;
         if (!name) return alert("فضلاً أدخل اسمك");
+        
+        // رسالة التنبيه المضافة لتوجيه الطلاب بالتوقيت
+        alert("تنبيه هام قبل البدء:\n\n1️⃣ بطاقات المعلومات التي تظهر لك غير مقيدة بوقت، خذ وقتك الكامل لقراءتها واستيعابها جيداً.\n\n2️⃣ بمجرد انتقالك للسؤال، يبدأ مؤقت تنازلي (8 ثوانٍ)، يرجى التركيز والحل سريعاً قبل نهاية الوقت.");
+        
         music.play().catch(e => console.log("Music play blocked"));
         document.getElementById('final-name').value = name;
         document.getElementById('step-start').classList.add('hidden');
